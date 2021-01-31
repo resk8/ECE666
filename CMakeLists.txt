@@ -1,11 +1,7 @@
+# Get the problem name from the current directory
+get_filename_component(problem ${CMAKE_CURRENT_SOURCE_DIR} NAME)
+
 cmake_minimum_required(VERSION 2.8.12.2)
-project(ECE666)
-
-include(CTest)
-enable_testing()
-
-set(CPACK_PROJECT_NAME ${PROJECT_NAME})
-set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
-include(CPack)
+project(${problem} C)
 
 add_subdirectory(Homework1)
