@@ -3,93 +3,75 @@
 // Renato Oliveira PUID: 033167709
 
 #include <stdio.h>
-#include <string.h>
+#include <pthread.h>
 
-#define DIM 6
+#define NUM_THREADS 8
 
-void init_mat(int N, int *a, int *b, int *c) {
-    int i, j, k;
+typedef struct MatMultData {
+    int _tid;
+    int _N;
+    int *_a;
+    int *_b;
+    int *_c;    
+} matMultData_t;
 
-    for(j=0; j<N; j++) {
-        for(i=0; i<N; i++) {
-            a[i*N + j] = i;
-            b[i*N + j] = j;
-            c[i*N + j] = 0;
-        }
-    }    
-}
+void * worker(void *args)
+{   
+    int chunk_size, start, end;
+    int i, j, k, sum;
+    matMultData_t *data = args;
 
-void matmult(int N, int *a, int *b, int *c) {
-    int i, j, k;
+    //printf("Matrix multplication thread thread %d\n", data->_tid);
+    //split the matrix in chunks based on the amount of threads
+    chunk_size = data->_N / NUM_THREADS;
+    start = data->_tid  * chunk_size;
+    end = start + chunk_size;
 
-    for(j=0; j<N; j++) {
-        for(i=0; i<N; i++) {
-            c[i*N + j] = 0;
-        }
-    }
-    for(k=0; k<N; k++) {
-        for(j=0; j<N; j++) {
-            for(i=0; i<N; i++) {
-                c[i*N +j] += a[i*N + k] * b[k*N +j];
+    for(i=start; i<end; i++) {
+        for(j=0; j<data->_N; j++) {
+            for(k=0; k<data->_N; k++) {
+                data->_c[i*data->_N + j] += data->_a[i*data->_N + k] * data->_b[k*data->_N + j];
             }
         }
     }
 }
 
-void some_matmult(int N, int *a, int *b, int *c) {
-  int i, j, k;
+void matmult(int N, int *a, int *b, int *c) {
+    int i;    
+    pthread_t worker_threads[NUM_THREADS-1];
 
-  /* Initialize the matrices. */
-  for (i = 0; i < N; i++)
-    for (j = 0; j < N; j++)
-      {
-	    c[i*N + j] = 0;
-      }
+    /////////////////////////////////////////////////
+    //WARNING: Super ugly code below. forgive me :(//
+    /////////////////////////////////////////////////
 
-  /* Multiply matrices. */
-  for (i = 0; i < N; i++)	
-    for (j = 0; j < N; j++)
-      for (k = 0; k < N; k++)
-	    c[i*N + j] += a[i*N + k] * b[k*N + j];
-}
-
-int main(void) {
-    int i;
-    int dim = DIM * DIM; //2dmatrix 6X6
-    int A[dim];
-    int B[dim];
-    int C[dim];
-
-    int D[dim];
-    int E[dim];
-    int F[dim];
-
-    memset(C, 0, dim*sizeof(*C));
-    memset(F, 0, dim*sizeof(*F));
-
-    init_mat(DIM,A,B,C);
-    init_mat(DIM,D,E,F);
-
-    for(i=0;i<dim;i++)
+    //had to create copies of this matrix data structure
+    //only for the purpose of avoiding undercount/overcount
+    //with _tid
+    matMultData_t data[NUM_THREADS];
+    data[0]._N = N;
+    data[0]._a = a;
+    data[0]._b = b;
+    data[0]._c = c;    
+    data[0]._tid = 0;
+    
+    for(i=1; i<NUM_THREADS; i++)
     {
-        printf("c[%d] = %d, f[%d] = %d\n",i,C[i],i,F[i]);
-    }
-
-    matmult(DIM,A,B,C);
-    some_matmult(DIM,D,E,F);
-
-    char result[5];
-    sprintf(result, "%s", "PASS");
-
-    printf("\n\n");
-    for(i=0;i<dim;i++)
-    {
-        printf("c[%d] = %d, f[%d] = %d\n",i,C[i],i,F[i]);
-        if(C[i] != F[i]) {
-            sprintf(result, "%s", "FAIL");
+        data[i]._N = N;
+        data[i]._a = a;
+        data[i]._b = b;
+        data[i]._c = c;    
+        data[i]._tid = i;
+        
+        //[i-1] thread 1 to 7
+        if(pthread_create(&worker_threads[i-1], NULL, worker, &data[i])) {
+            printf("Error creating thread %d\n", i);
         }
     }
-    printf("hello world matrix mul. result is %s\n", result);
+    worker(&data[0]);
 
-    return;
+    for(i=0; i<NUM_THREADS-1; i++)
+    {
+        pthread_join(worker_threads[i],NULL);
+    }
 }
+
