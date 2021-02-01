@@ -1,11 +1,13 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <pthread.h>
 #include <math.h>
 #include <sys/time.h>
 
-#define DIM 9
+#define DIM 4
 
 extern void matmult(int N, int *a, int *b, int *c);
+extern void sort(int N, int *arr);
 
 void some_matmult(int N, int *a, int *b, int *c) {
   int i, j, k;
@@ -29,7 +31,7 @@ void init_mat(int N, int *a, int *b, int *c) {
     }    
 }
 
-int main(void) {
+void do_matrix_test(void) {
     int i;
     double exectime1, exectime2;
     struct timeval tstart1, tend1, tstart2, tend2;
@@ -40,6 +42,8 @@ int main(void) {
     int B[twoD_dim];
     int C[twoD_dim];
     int D[twoD_dim];
+
+    printf("\nStarting Matrix Multiplication Test...\n");
 
     init_mat(dim,A,B,C);
     init_mat(dim,A,B,D);
@@ -56,7 +60,7 @@ int main(void) {
     char result[5];
     sprintf(result, "%s", "PASS");
 
-    printf("\n\n");
+    //printf("\n\n");
     for(i=0;i<twoD_dim;i++)
     {
         //printf("c[%d] = %d, d[%d] = %d\n",i,C[i],i,D[i]);
@@ -71,8 +75,41 @@ int main(void) {
     exectime2 = (tend2.tv_sec - tstart2.tv_sec) * 1000.0; // sec to ms
     exectime2 += (tend2.tv_usec - tstart2.tv_usec) / 1000.0; // us to ms
 
-    printf("hello world matrix mul. result is %s\n", result);
-    printf("parallel execution time %.3lf ms\n", exectime1);
+    printf("Matrix mul. Result is %s\n", result);
+    printf("Parallel execution time %.3lf ms\n", exectime1);
     printf("Sequential execution time %.3lf ms\n", exectime2);
-    return;
+}
+
+void do_sort_test(void) {
+    int i;
+    int size = pow(2,DIM);
+    int myarr[size];
+
+    printf("\nStarting Sorting Test...\n");
+
+    for(i=0; i<size; i++) {
+        myarr[i] = rand() % size + 1;
+    }
+    
+    sort(size, myarr);
+
+    // for(i=0; i < size; i++) {
+    //     printf("myarr[%d] = %d\n", i, myarr[i]);
+    // }
+
+    char result[5];
+    sprintf(result, "%s", "PASS");
+    for(i=0; i < size-1; i++) {
+        if(myarr[i] > myarr[i+1]) {
+            sprintf(result, "%s", "FAIL");
+        }
+    }
+    printf("Parallel sort. Result is %s\n", result);
+}
+
+int main(void) {
+
+    do_matrix_test();
+    do_sort_test();
+    return 0;
 }

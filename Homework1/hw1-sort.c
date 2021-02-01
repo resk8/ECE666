@@ -6,3 +6,8 @@
 #include <pthread.h>
 
 #define NUM_THREADS 8
+
+
+void sort(int N, int *arr) {
+    int i;
+}
