@@ -57,7 +57,7 @@ int main(void) {
     printf("\n\n");
     for(i=0;i<twoD_dim;i++)
     {
-        printf("c[%d] = %d, d[%d] = %d\n",i,C[i],i,D[i]);
+        //printf("c[%d] = %d, d[%d] = %d\n",i,C[i],i,D[i]);
         if(C[i] != D[i]) {
             sprintf(result, "%s", "FAIL");
         }
