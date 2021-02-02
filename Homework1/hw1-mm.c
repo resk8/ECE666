@@ -69,7 +69,7 @@ void matmult(int N, int *a, int *b, int *c) {
     }
     worker(&data[0]);
 
-    for(i=0; i<NUM_THREADS-1; i++)
+    for(i=0; i<NUM_THREADS; i++)
     {
         pthread_join(worker_threads[i],NULL);
     }

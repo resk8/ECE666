@@ -4,7 +4,7 @@
 #include <math.h>
 #include <sys/time.h>
 
-#define DIM 4
+#define DIM 9
 
 extern void matmult(int N, int *a, int *b, int *c);
 extern void sort(int N, int *arr);
@@ -63,7 +63,7 @@ void seq_quickSort(int *arr, int bot, int top) {
 }
 
 void seq_sort(int N, int *arr) {
-    seq_quickSort(arr, 0, N);
+    seq_quickSort(arr, 0, N-1);
 }
 
 void do_matrix_test(void) {
@@ -120,6 +120,8 @@ void do_sort_test(void) {
     int size = pow(2,DIM);
     int myarr1[size];
     int myarr2[size];
+    double exectime1, exectime2;
+    struct timeval tstart1, tend1, tstart2, tend2;
 
     printf("\nStarting Sorting Test...\n");
 
@@ -128,12 +130,18 @@ void do_sort_test(void) {
         myarr2[i] = myarr1[i];
     }
 
-    for(i=0; i < size; i++) {
-        printf("myarr1[%d] = %d, myarr2[%d] = %d\n", i, myarr1[i], i, myarr2[i]);
-    }
+    // for(i=0; i < size; i++) {
+    //     printf("myarr1[%d] = %d, myarr2[%d] = %d\n", i, myarr1[i], i, myarr2[i]);
+    // }
 
-    seq_sort(size, myarr2);
+    gettimeofday( &tstart1, NULL );
     sort(size, myarr1);
+    gettimeofday( &tend1, NULL );
+
+
+    gettimeofday( &tstart2, NULL );
+    seq_sort(size, myarr2);   
+    gettimeofday( &tend2, NULL );    
 
     char result[20];
     sprintf(result, "%s", "PASS");
@@ -143,13 +151,23 @@ void do_sort_test(void) {
         }
     }
 
+    printf("\n");
     for(i=0; i < size; i++) {
-        printf("myarr1[%d] = %d, myarr2[%d] = %d\n", i, myarr1[i], i, myarr2[i]);
+        // printf("myarr1[%d] = %d, myarr2[%d] = %d\n", i, myarr1[i], i, myarr2[i]);
         if(myarr1[i] != myarr2[i]) {
             sprintf(result, "%s", "FAIL arrays differ");
         }
     }
+
+    exectime1 = (tend1.tv_sec - tstart1.tv_sec) * 1000.0; // sec to ms
+    exectime1 += (tend1.tv_usec - tstart1.tv_usec) / 1000.0; // us to ms
+
+    exectime2 = (tend2.tv_sec - tstart2.tv_sec) * 1000.0; // sec to ms
+    exectime2 += (tend2.tv_usec - tstart2.tv_usec) / 1000.0; // us to ms
+
     printf("Parallel sort. Result is %s\n", result);
+    printf("Parallel execution time %.3lf ms\n", exectime1);
+    printf("Sequential execution time %.3lf ms\n", exectime2);
 }
 
 int main(void) {
