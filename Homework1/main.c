@@ -117,7 +117,7 @@ void do_matrix_test(void) {
 
 void do_sort_test(void) {
     int i;
-    int size = pow(2,DIM);
+    int size = pow(2,2*DIM);
     int myarr1[size];
     int myarr2[size];
     double exectime1, exectime2;

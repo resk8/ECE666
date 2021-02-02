@@ -5,6 +5,11 @@
 #include <stdio.h>
 #include <pthread.h>
 
+#define NUM_THREADS 8
+pthread_t worker_threads[NUM_THREADS];
+pthread_mutex_t g_worker_mutex;
+int g_woring_threads;
+
 typedef struct sortData {
     int * pArr;
     int bot;
@@ -33,6 +38,16 @@ int do_split(int my_arr[], int bot, int top) {
     return (index+1);
 }
 
+void _quickSort(int *arr, int bot, int top) {
+    int split_index;
+
+    if ( bot < top ) {
+        split_index = do_split(arr, bot, top);
+        _quickSort(arr, bot, split_index-1);
+        _quickSort(arr, split_index+1, top);
+    }
+}
+
 void * quickSort(void * data) {
     int split_index, i;
     sortdata_t split_bot;
@@ -44,30 +59,30 @@ void * quickSort(void * data) {
     split_top.top = split_bot.top = incoming->top;
     split_top.bot = split_bot.bot = incoming->bot;
 
-    pthread_t worker_threads[2];
-    if ( incoming->bot < incoming->top ) {
-        split_index = do_split(incoming->pArr, incoming->bot, incoming->top);
+    pthread_mutex_lock(&g_worker_mutex);
+    if (g_woring_threads < NUM_THREADS) {
+        int id = g_woring_threads;
+        g_woring_threads++;
+        pthread_mutex_unlock(&g_worker_mutex);
+
+        if ( incoming->bot < incoming->top ) {
+            split_index = do_split(incoming->pArr, incoming->bot, incoming->top);
         
-        split_bot.top = split_index-1;
-        //quickSort(&split_bot);
-        if (pthread_create(&worker_threads[0], NULL, quickSort, &split_bot)) {
-            printf("Error creating thread for bot split\n");
-            return NULL;
-        }
+            split_top.bot = split_index+1;
+            //quickSort(&split_top);
+            if (pthread_create(&worker_threads[id], NULL, quickSort, &split_top)) {
+                printf("Error creating thread for top split\n");
+                return NULL;
+            }
 
-        split_top.bot = split_index+1;
-        //quickSort(&split_top);
-        if (pthread_create(&worker_threads[1], NULL, quickSort, &split_top)) {
-            printf("Error creating thread for top split\n");
-            return NULL;
+            split_bot.top = split_index-1;
+            quickSort(&split_bot);
+            pthread_join(worker_threads[id],NULL);
         }
-
-        for(i=0; i<2; i++)
-        {
-            pthread_join(worker_threads[i],NULL);
-        }
+    } else {
+        pthread_mutex_unlock(&g_worker_mutex);
+        _quickSort(incoming->pArr, incoming->bot, incoming->top);
     }
-    return NULL;
 }
 
 void sort(int N, int *arr) {
@@ -75,5 +90,6 @@ void sort(int N, int *arr) {
     data.pArr = arr;
     data.bot = 0;
     data.top = N-1;
+    g_woring_threads = 0;
     quickSort(&data);
 }
