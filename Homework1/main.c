@@ -31,6 +31,41 @@ void init_mat(int N, int *a, int *b, int *c) {
     }    
 }
 
+void seq_do_swap(int *x, int *y) { 
+    int tmp = *x; 
+    *x = *y; 
+    *y = tmp; 
+}
+
+int seq_do_split(int *my_arr, int bot, int top) {
+    int i;
+    int index = bot - 1;
+    int pivot = my_arr[top];
+
+    for (i=bot; i <= top-1; i++) {
+        if (my_arr[i] < pivot) {
+            index++;
+            seq_do_swap(&my_arr[index], &my_arr[i]);
+        }
+    }
+    seq_do_swap(&my_arr[index+1], &my_arr[top]);
+    return (index+1);
+}
+
+void seq_quickSort(int *arr, int bot, int top) {
+    int split_index;
+
+    if ( bot < top ) {
+        split_index = seq_do_split(arr, bot, top);
+        seq_quickSort(arr, bot, split_index-1);
+        seq_quickSort(arr, split_index+1, top);
+    }
+}
+
+void seq_sort(int N, int *arr) {
+    seq_quickSort(arr, 0, N);
+}
+
 void do_matrix_test(void) {
     int i;
     double exectime1, exectime2;
@@ -83,25 +118,35 @@ void do_matrix_test(void) {
 void do_sort_test(void) {
     int i;
     int size = pow(2,DIM);
-    int myarr[size];
+    int myarr1[size];
+    int myarr2[size];
 
     printf("\nStarting Sorting Test...\n");
 
     for(i=0; i<size; i++) {
-        myarr[i] = rand() % size + 1;
+        myarr1[i] = rand() % size + 1;
+        myarr2[i] = myarr1[i];
     }
-    
-    sort(size, myarr);
 
-    // for(i=0; i < size; i++) {
-    //     printf("myarr[%d] = %d\n", i, myarr[i]);
-    // }
+    for(i=0; i < size; i++) {
+        printf("myarr1[%d] = %d, myarr2[%d] = %d\n", i, myarr1[i], i, myarr2[i]);
+    }
 
-    char result[5];
+    seq_sort(size, myarr2);
+    sort(size, myarr1);
+
+    char result[20];
     sprintf(result, "%s", "PASS");
     for(i=0; i < size-1; i++) {
-        if(myarr[i] > myarr[i+1]) {
-            sprintf(result, "%s", "FAIL");
+        if(myarr1[i] > myarr1[i+1]) {
+            sprintf(result, "%s", "FAIL not sorted");
+        }
+    }
+
+    for(i=0; i < size; i++) {
+        printf("myarr1[%d] = %d, myarr2[%d] = %d\n", i, myarr1[i], i, myarr2[i]);
+        if(myarr1[i] != myarr2[i]) {
+            sprintf(result, "%s", "FAIL arrays differ");
         }
     }
     printf("Parallel sort. Result is %s\n", result);
