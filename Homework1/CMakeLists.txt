@@ -5,11 +5,8 @@ cmake_minimum_required(VERSION 2.8.12.2)
 
 project(${problem} C)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -lpthread -O2")
 find_package(Threads REQUIRED)
-if(THREADS_HAVE_PTHREAD_ARG)
-  target_compile_options(${problem} PUBLIC "-pthread")
-endif()
 if(CMAKE_THREAD_LIBS_INIT)
   target_link_libraries(${problem} "${CMAKE_THREAD_LIBES_INIT}")
 endif()
