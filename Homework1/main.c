@@ -4,10 +4,11 @@
 #include <math.h>
 #include <sys/time.h>
 
+#define NUM_THREADS 1
 #define DIM 9
 
-extern void matmult(int N, int *a, int *b, int *c);
-extern void sort(int N, int *arr);
+extern void matmult(int N, int *a, int *b, int *c, int nThreads);
+extern void sort(int N, int *arr, int nThreads);
 
 void some_matmult(int N, int *a, int *b, int *c) {
   int i, j, k;
@@ -84,7 +85,7 @@ void do_matrix_test(void) {
     init_mat(dim,A,B,D);
 
     gettimeofday( &tstart1, NULL );
-    matmult(dim,A,B,C);
+    matmult(dim,A,B,C,NUM_THREADS);
     gettimeofday( &tend1, NULL );
 
 
@@ -135,7 +136,7 @@ void do_sort_test(void) {
     // }
 
     gettimeofday( &tstart1, NULL );
-    sort(size, myarr1);
+    sort(size, myarr1, NUM_THREADS);
     gettimeofday( &tend1, NULL );
 
 
@@ -151,7 +152,6 @@ void do_sort_test(void) {
         }
     }
 
-    printf("\n");
     for(i=0; i < size; i++) {
         // printf("myarr1[%d] = %d, myarr2[%d] = %d\n", i, myarr1[i], i, myarr2[i]);
         if(myarr1[i] != myarr2[i]) {

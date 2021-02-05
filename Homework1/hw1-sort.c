@@ -3,12 +3,13 @@
 // Renato Oliveira PUID: 033167709
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <pthread.h>
 
-#define NUM_THREADS 8
-pthread_t worker_threads[NUM_THREADS];
+pthread_t * g_worker_threads;
 pthread_mutex_t g_worker_mutex;
 int g_woring_threads;
+int g_numThreads;
 
 typedef struct sortData {
     int * pArr;
@@ -60,7 +61,7 @@ void * quickSort(void * data) {
     split_top.bot = split_bot.bot = incoming->bot;
 
     pthread_mutex_lock(&g_worker_mutex);
-    if (g_woring_threads < NUM_THREADS) {
+    if (g_woring_threads < g_numThreads) {
         int id = g_woring_threads;
         g_woring_threads++;
         pthread_mutex_unlock(&g_worker_mutex);
@@ -70,26 +71,33 @@ void * quickSort(void * data) {
         
             split_top.bot = split_index+1;
             //quickSort(&split_top);
-            if (pthread_create(&worker_threads[id], NULL, quickSort, &split_top)) {
+            if (pthread_create(&g_worker_threads[id], NULL, quickSort, &split_top)) {
                 printf("Error creating thread for top split\n");
                 return NULL;
             }
 
             split_bot.top = split_index-1;
             quickSort(&split_bot);
-            pthread_join(worker_threads[id],NULL);
+            pthread_join(g_worker_threads[id],NULL);
         }
     } else {
         pthread_mutex_unlock(&g_worker_mutex);
         _quickSort(incoming->pArr, incoming->bot, incoming->top);
     }
+    return NULL;
 }
 
-void sort(int N, int *arr) {
+void sort(int N, int *arr, int nThreads) {    
     sortdata_t data;
+
+    g_numThreads = nThreads;
+    g_worker_threads = malloc(g_numThreads * sizeof(pthread_t));
+
     data.pArr = arr;
     data.bot = 0;
     data.top = N-1;
     g_woring_threads = 0;
     quickSort(&data);
+
+    free(g_worker_threads);
 }
