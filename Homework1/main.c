@@ -4,7 +4,7 @@
 #include <math.h>
 #include <sys/time.h>
 
-#define NUM_THREADS 1
+#define NUM_THREADS 8
 #define DIM 9
 
 extern void matmult(int N, int *a, int *b, int *c, int nThreads);
@@ -171,7 +171,6 @@ void do_sort_test(void) {
 }
 
 int main(void) {
-
     do_matrix_test();
     do_sort_test();
     return 0;
