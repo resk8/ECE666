@@ -8,7 +8,7 @@
 				"command": "cd build ; cmake -G 'Unix Makefiles' -D CMAKE_EXPORT_COMPILE_COMMANDS=1 .. ; make ; cd .."
 			},
 			"linux":{
-				"command": "cd build ; cmake -G 'Ninja' -D CMAKE_EXPORT_COMPILE_COMMANDS=1 .. ; Ninja ; cd .."
+				"command": "cd build ; cmake -G 'Ninja' -D CMAKE_EXPORT_COMPILE_COMMANDS=1 .. ; ninja ; cd .."
 			},
 			"options": {
 				"cwd": "${workspaceFolder}"
