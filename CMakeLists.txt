@@ -5,3 +5,4 @@ cmake_minimum_required(VERSION 2.8.12.2)
 project(${problem} C)
 
 add_subdirectory(Homework1)
+add_subdirectory(Homework2)
