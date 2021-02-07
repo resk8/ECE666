@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <sys/time.h>
+#include <unistd.h>
 #include <mpi.h>
 
 int main(void) {

@@ -4,15 +4,22 @@
 		{
 			"type": "shell",
 			"label": "homework1 build",
-			"command": "cd build ; cmake -G 'Ninja' -D CMAKE_EXPORT_COMPILE_COMMANDS=1 .. ; ninja ; cd ..",
+			"osx":{
+				"command": "cd build ; cmake -G 'Unix Makefiles' -D CMAKE_EXPORT_COMPILE_COMMANDS=1 .. ; make ; cd .."
+			},
+			"linux":{
+				"command": "cd build ; cmake -G 'Ninja' -D CMAKE_EXPORT_COMPILE_COMMANDS=1 .. ; Ninja ; cd .."
+			},
 			"options": {
 				"cwd": "${workspaceFolder}"
 			},
 			"problemMatcher": [
 				"$gcc"
 			],
-			"group": "build",
-			"detail": "compiler: /usr/bin/gcc"
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }	
 		}
 	]
 }
