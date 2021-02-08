@@ -2,7 +2,7 @@
 get_filename_component(problem homework1 NAME)
 #project(${problem} C) 
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread -O1")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -lpthread -O1")
 find_package(Threads REQUIRED)
 if(CMAKE_THREAD_LIBS_INIT)
   target_link_libraries(${problem} "${CMAKE_THREAD_LIBES_INIT}")

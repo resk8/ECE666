@@ -34,7 +34,7 @@
             "type": "cppdbg",
             "request": "attach",
             "processId":"${command:pickProcess}",
-            "program": "${workspaceFolder}/build/Homework2/Sort/MatrixMul",
+            "program": "${workspaceFolder}/build/Homework2/MatrixMul/matrixmul",
             // "stopAtEntry": false,
             // "cwd": "${workspaceFolder}",
             // "environment": [],
