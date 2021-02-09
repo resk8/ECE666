@@ -5,8 +5,8 @@
 #include <unistd.h>
 #include <mpi.h>
 
-#define NUM_PROCESSES 9
-#define DIM 6
+#define NUM_PROCESSES 2
+#define DIM 1
 
 int g_numThreads;
 //pthread_t * g_worker_threads;
@@ -64,51 +64,89 @@ void * worker(void *args)
 }
 
 void matmult(int N, int *a, int *b, int *c) {
-    int i, j, k, myid, start, end, chunk_size, worker;
+    int i, j, k, myid, start, end, chunk_size, worker, d[N*N], tmp;
     MPI_Status work_status;
-    g_numThreads = NUM_PROCESSES + 1;     // 9 processors -> 8 workers, 1 main
+    g_numThreads = NUM_PROCESSES + 1; // 9 processors -> 8 workers, 1 main
     chunk_size = N/NUM_PROCESSES;     // calculate the size of data a worker will work on
 
     MPI_Init(NULL, NULL);                 // Initialize the MPI environments
     MPI_Comm_rank(MPI_COMM_WORLD, &myid); // Get the rank of the process
     if (myid == 0) {
         
+        printf("\nStarting Matrix Multiplication Test...\n");
+
+        init_mat(N,a,b,c);
+        init_mat(N,a,b,d);        
+
         //send work to workers
         for (worker = 1; worker < g_numThreads; worker++) {
             start = (worker-1) * chunk_size; // worker 1 will start at address [0, chunk_size]
             end = start + chunk_size;
 
+            printf("Sending to worker %d, Matrix a start 0x%08x, Matrix b start 0x%08x, start at %d in chunks of %d\n", worker, &a, &b, start, chunk_size);
             MPI_Send(&start, 1, MPI_INT, worker, 1, MPI_COMM_WORLD);
-            //MPI_Send(&end, 1, MPI_INT, worker, 1, MPI_COMM_WORLD);
-            MPI_Send(&a[start], chunk_size, MPI_INT, worker, 1, MPI_COMM_WORLD);
-            MPI_Send(&b[start], chunk_size, MPI_INT, worker, 1, MPI_COMM_WORLD);
+            MPI_Send(&end, 1, MPI_INT, worker, 1, MPI_COMM_WORLD);
+            MPI_Send(&a[start], chunk_size*N, MPI_INT, worker, 1, MPI_COMM_WORLD);
+            MPI_Send(&b, N*N, MPI_INT, worker, 1, MPI_COMM_WORLD);
         }
 
         //receive results from workers
         for (worker = 1; worker < g_numThreads; worker++) {
             MPI_Recv(&start, 1, MPI_INT, worker, 2, MPI_COMM_WORLD, &work_status);
-            MPI_Recv(&c[start], chunk_size, MPI_DOUBLE, worker, 2, MPI_COMM_WORLD, &work_status);
+            MPI_Recv(&end, 1, MPI_INT, worker, 2, MPI_COMM_WORLD, &work_status);
+            MPI_Recv(&c[start], chunk_size*N, MPI_INT, worker, 2, MPI_COMM_WORLD, &work_status);
         }
+
+        //sequential
+        some_matmult(N,a,b,d);
+
+        char result[5];
+        sprintf(result, "%s", "PASS");
+        for(i=0;i<N*N;i++)
+        {
+            //printf("c[%d] = %d, d[%d] = %d\n",i,c[i],i,d[i]);
+            if(c[i] != d[i]) {
+                sprintf(result, "%s", "FAIL");
+            }
+        }
+
+        //exectime1 = (tend1.tv_sec - tstart1.tv_sec) * 1000.0; // sec to ms
+        //exectime1 += (tend1.tv_usec - tstart1.tv_usec) / 1000.0; // us to ms
+
+        //exectime2 = (tend2.tv_sec - tstart2.tv_sec) * 1000.0; // sec to ms
+        //exectime2 += (tend2.tv_usec - tstart2.tv_usec) / 1000.0; // us to ms
+
+        printf("MPI Matrix mul. Result is %s\n", result);
+        //printf("Parallel MPI execution time %.3lf ms\n", exectime1);
+        //printf("Sequential execution time %.3lf ms\n", exectime2);
 
     } else {        
         //receive data from main to start work
-        MPI_Recv(&start, 1, MPI_INT, worker, 1, MPI_COMM_WORLD, &work_status);
-        //MPI_Recv(&end, 1, MPI_INT, worker, 1, MPI_COMM_WORLD, &work_status);
-        MPI_Recv(&a, chunk_size, MPI_INT, 0, 1, MPI_COMM_WORLD, &work_status);
-        MPI_Recv(&b, chunk_size, MPI_INT, 0, 1, MPI_COMM_WORLD, &work_status);
+        MPI_Recv(&start, 1, MPI_INT, 0, 1, MPI_COMM_WORLD, &work_status);
+        MPI_Recv(&end, 1, MPI_INT, 0, 1, MPI_COMM_WORLD, &work_status);
+        MPI_Recv(&a, chunk_size*N, MPI_INT, 0, 1, MPI_COMM_WORLD, &work_status);
+        MPI_Recv(&b, N*N, MPI_INT, 0, 1, MPI_COMM_WORLD, &work_status);
+        //printf("worker %d receiving work from Main\n",myid);
 
+        printf("Receiving worker %d, Matrix a start 0x%08x, Matrix b start 0x%08x, start at %d in chunks of %d\n", myid, a, b, start, chunk_size);
         //THE WORK
         for(i=0; i<chunk_size; i++) {
-            for(j=0; j<N; j++) {
-                for(k=0; k<N; k++) {
-                    c[i*N + j] += a[i*N + k] * b[k*N + j];
-                }
-            }
+           for(j=0; j<N; j++) {
+               for(k=0; k<N; k++) {
+                   c[i*N + j] += a[i*N + k] * b[k*N + j];
+                   printf("c[%d] = %d, a[%d] = %d b[%d] = %d\n",i*N + j,c[i*N + j],i*N + k,a[i*N + k],k*N + j,b[k*N + j]);
+                   //tmp = a[i*N + k];
+                   //tmp = b[k*N + j];
+                   //c[i*N + j] = 1;
+                   
+               }
+           }
         }
 
         //send result to main
         MPI_Send(&start, 1, MPI_INT, 0, 2, MPI_COMM_WORLD);
-        MPI_Send(&c, chunk_size, MPI_DOUBLE, 0, 2, MPI_COMM_WORLD);
+        MPI_Send(&end, 1, MPI_INT, 0, 2, MPI_COMM_WORLD);
+        MPI_Send(&c, chunk_size*N, MPI_INT, 0, 2, MPI_COMM_WORLD);
     }
 
     // Finalize the MPI environment.
@@ -125,43 +163,6 @@ int main(void) {
     int A[twoD_dim];
     int B[twoD_dim];
     int C[twoD_dim];
-    int D[twoD_dim];
-
-    printf("\nStarting Matrix Multiplication Test...\n");
-
-    init_mat(dim,A,B,C);
-    init_mat(dim,A,B,D);
-
-    //gettimeofday( &tstart1, NULL );
     matmult(dim,A,B,C);
-    //gettimeofday( &tend1, NULL );
-
-
-    //gettimeofday( &tstart2, NULL );
-    some_matmult(dim,A,B,D);
-    //gettimeofday( &tend2, NULL );
-
-    char result[5];
-    sprintf(result, "%s", "PASS");
-
-    //printf("\n\n");
-    for(i=0;i<twoD_dim;i++)
-    {
-        //printf("c[%d] = %d, d[%d] = %d\n",i,C[i],i,D[i]);
-        if(C[i] != D[i]) {
-            sprintf(result, "%s", "FAIL");
-        }
-    }
-
-    //exectime1 = (tend1.tv_sec - tstart1.tv_sec) * 1000.0; // sec to ms
-    //exectime1 += (tend1.tv_usec - tstart1.tv_usec) / 1000.0; // us to ms
-
-    //exectime2 = (tend2.tv_sec - tstart2.tv_sec) * 1000.0; // sec to ms
-    //exectime2 += (tend2.tv_usec - tstart2.tv_usec) / 1000.0; // us to ms
-
-    printf("Matrix mul. Result is %s\n", result);
-    //printf("Parallel execution time %.3lf ms\n", exectime1);
-    //printf("Sequential execution time %.3lf ms\n", exectime2);
-
     return 0;
 }
