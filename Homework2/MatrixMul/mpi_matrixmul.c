@@ -5,8 +5,8 @@
 #include <unistd.h>
 #include <mpi.h>
 
-#define NUM_THREADS 8
-#define DIM 9
+#define NUM_PROCESSES 9
+#define DIM 6
 
 int g_numThreads;
 //pthread_t * g_worker_threads;
@@ -63,64 +63,53 @@ void * worker(void *args)
     return NULL;
 }
 
-void matmult(int N, int *a, int *b, int *c, int nThreads) {
-    // int i;
-    // g_numThreads = nThreads;
-    // g_worker_threads = malloc(g_numThreads * sizeof(pthread_t));    
+void matmult(int N, int *a, int *b, int *c) {
+    int i, j, k, myid, start, end, chunk_size, worker;
+    MPI_Status work_status;
+    g_numThreads = NUM_PROCESSES + 1;     // 9 processors -> 8 workers, 1 main
+    chunk_size = N/NUM_PROCESSES;     // calculate the size of data a worker will work on
 
-    // /////////////////////////////////////////////////
-    // //WARNING: Super ugly code below. forgive me :(//
-    // /////////////////////////////////////////////////
-
-    // //had to create copies of this matrix data structure
-    // //only for the purpose of avoiding undercount/overcount
-    // //with _tid
-    // matMultData_t data[g_numThreads];
-    // data[0]._N = N;
-    // data[0]._a = a;
-    // data[0]._b = b;
-    // data[0]._c = c;    
-    // data[0]._tid = 0;
-    
-    // for(i=1; i<g_numThreads; i++) {
-    //     data[i]._N = N;
-    //     data[i]._a = a;
-    //     data[i]._b = b;
-    //     data[i]._c = c;    
-    //     data[i]._tid = i;
+    MPI_Init(NULL, NULL);                 // Initialize the MPI environments
+    MPI_Comm_rank(MPI_COMM_WORLD, &myid); // Get the rank of the process
+    if (myid == 0) {
         
-    //     //[i-1] thread 1 to 7
-    //     if(pthread_create(&g_worker_threads[i-1], NULL, worker, &data[i])) {
-    //         printf("Error creating thread %d\n", i);
-    //     }
-    // }
-    // worker(&data[0]);
+        //send work to workers
+        for (worker = 1; worker < g_numThreads; worker++) {
+            start = (worker-1) * chunk_size; // worker 1 will start at address [0, chunk_size]
+            end = start + chunk_size;
 
-    // for(i=0; i<g_numThreads-1; i++) {
-    //    pthread_join(g_worker_threads[i],NULL);
-    // }
+            MPI_Send(&start, 1, MPI_INT, worker, 1, MPI_COMM_WORLD);
+            //MPI_Send(&end, 1, MPI_INT, worker, 1, MPI_COMM_WORLD);
+            MPI_Send(&a[start], chunk_size, MPI_INT, worker, 1, MPI_COMM_WORLD);
+            MPI_Send(&b[start], chunk_size, MPI_INT, worker, 1, MPI_COMM_WORLD);
+        }
 
-    // free(g_worker_threads);
+        //receive results from workers
+        for (worker = 1; worker < g_numThreads; worker++) {
+            MPI_Recv(&start, 1, MPI_INT, worker, 2, MPI_COMM_WORLD, &work_status);
+            MPI_Recv(&c[start], chunk_size, MPI_DOUBLE, worker, 2, MPI_COMM_WORLD, &work_status);
+        }
 
-    // Initialize the MPI environments
-    MPI_Init(NULL, NULL);
+    } else {        
+        //receive data from main to start work
+        MPI_Recv(&start, 1, MPI_INT, worker, 1, MPI_COMM_WORLD, &work_status);
+        //MPI_Recv(&end, 1, MPI_INT, worker, 1, MPI_COMM_WORLD, &work_status);
+        MPI_Recv(&a, chunk_size, MPI_INT, 0, 1, MPI_COMM_WORLD, &work_status);
+        MPI_Recv(&b, chunk_size, MPI_INT, 0, 1, MPI_COMM_WORLD, &work_status);
 
-    // Get the number of processes
-    int world_size;
-    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+        //THE WORK
+        for(i=0; i<chunk_size; i++) {
+            for(j=0; j<N; j++) {
+                for(k=0; k<N; k++) {
+                    c[i*N + j] += a[i*N + k] * b[k*N + j];
+                }
+            }
+        }
 
-    // Get the rank of the process
-    int world_rank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
-
-    // Get the name of the processor
-    char processor_name[MPI_MAX_PROCESSOR_NAME];
-    int name_len;
-    MPI_Get_processor_name(processor_name, &name_len);
-
-    // Print off a hello world message
-    printf("Hello world from processor %s, rank %d out of %d processors\n",
-           processor_name, world_rank, world_size);
+        //send result to main
+        MPI_Send(&start, 1, MPI_INT, 0, 2, MPI_COMM_WORLD);
+        MPI_Send(&c, chunk_size, MPI_DOUBLE, 0, 2, MPI_COMM_WORLD);
+    }
 
     // Finalize the MPI environment.
     MPI_Finalize();
@@ -144,7 +133,7 @@ int main(void) {
     init_mat(dim,A,B,D);
 
     //gettimeofday( &tstart1, NULL );
-    matmult(dim,A,B,C,NUM_THREADS);
+    matmult(dim,A,B,C);
     //gettimeofday( &tend1, NULL );
 
 
