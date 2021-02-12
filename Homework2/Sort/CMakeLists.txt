@@ -1,5 +1,5 @@
 # Get the problem name from the current directory
-get_filename_component(problem quicksort NAME)
+get_filename_component(problem bubblesort NAME)
 #project(${problem} C)
 
 # Add all cpp and h files
