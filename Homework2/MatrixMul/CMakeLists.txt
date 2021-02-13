@@ -2,6 +2,7 @@
 get_filename_component(problem matrixmul NAME)
 #project(${problem} C)
 
+add_definitions(-DMYDEBUG)
 # Add all cpp and h files
 file(GLOB SRC_FILES
     "*.h"
@@ -9,6 +10,10 @@ file(GLOB SRC_FILES
 )
 
 add_executable(${problem} ${SRC_FILES})
+set_target_properties(${problem} 
+                      PROPERTIES 
+                      RUNTIME_OUTPUT_DIRECTORY 
+                      "${CMAKE_SOURCE_DIR}/Homework2/MatrixMul/bin")
 
 if(MPI_COMPILE_FLAGS)
   set_target_properties(${problem} PROPERTIES

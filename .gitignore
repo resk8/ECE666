@@ -2,3 +2,8 @@
 */build/*
 build/*
 settings.json
+a.4096.bin
+b.4096.bin
+c.64.bin
+c.4096.bin
+matrixmul
