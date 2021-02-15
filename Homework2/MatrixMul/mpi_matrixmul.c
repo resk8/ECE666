@@ -50,20 +50,6 @@ int read_from_file(char * filename, double *data, int num) {
     }
 } 
 
-
-// void init_mat(int N, double *a, double *b) {
-//     int i, j;
-
-//     srand48(time(NULL)); //Give drand48() a seed value
-    
-//     for(j=0; j<N; j++) {
-//         for(i=0; i<N; i++) {
-//             *((a+i*N) + j) = drand48(); // 1.0;
-//             *((b+i*N) + j) = drand48(); // 1.0;
-//         }
-//     }    
-// }
-
 void sequential_matmult(int N, double *a, double *b, double *c) {
   int i, j, k;
 
@@ -85,10 +71,10 @@ int main(int argc, char* argv[]) {
     char file_a[15];
     char file_b[15];
     char file_c[15];
-    double* a;
-    double* b;
-    double* c;
-    double* d;
+    double* a = NULL;
+    double* b = NULL;
+    double* c = NULL;
+    double* d = NULL;
 
     if(argc < 2) {
         printf("Need to pass matrix dimension\n");
@@ -121,8 +107,6 @@ int main(int argc, char* argv[]) {
 
 #ifdef MYDEBUG
         printf("Starting Parallel Matrix Multiplication Test...\n");
-        //init matrices
-        //init_mat(N,a,b);
         tstart1 = MPI_Wtime();
 #endif
         //send work to workers

@@ -80,73 +80,39 @@ void sequential_sort(int *arr, int bot, int top) {
     }
 }
 
-// void * quickSort(void * data) {
-//     int split_index, i;
-//     sortdata_t split_bot;
-//     sortdata_t split_top;
-//     sortdata_t * incoming = data;
-    
-//     //deep copy
-//     split_top.pArr = split_bot.pArr = incoming->pArr;
-//     split_top.top = split_bot.top = incoming->top;
-//     split_top.bot = split_bot.bot = incoming->bot;
-
-//     pthread_mutex_lock(&g_worker_mutex);
-//     if (g_woring_threads < g_numThreads) {
-//         int id = g_woring_threads;
-//         g_woring_threads++;
-//         pthread_mutex_unlock(&g_worker_mutex);
-
-//         if ( incoming->bot < incoming->top ) {
-//             split_index = do_split(incoming->pArr, incoming->bot, incoming->top);
-        
-//             split_top.bot = split_index+1;
-//             //quickSort(&split_top);
-//             if (pthread_create(&g_worker_threads[id], NULL, quickSort, &split_top)) {
-//                 printf("Error creating thread for top split\n");
-//                 return NULL;
-//             }
-
-//             split_bot.top = split_index-1;
-//             quickSort(&split_bot);
-//             pthread_join(g_worker_threads[id],NULL);
-//         }
-//     } else {
-//         pthread_mutex_unlock(&g_worker_mutex);
-//         _quickSort(incoming->pArr, incoming->bot, incoming->top);
-//     }
-//     return NULL;
-// }
-
 int main(int argc, char* argv[]) {
     int i, myid, chunk_size, worker, start, N, rval;
     double tstart1, tend1, tstart2, tend2, exectime1, exectime2;
     MPI_Status work_status;
     char file_in[15];
     char file_out[15];
-    int* myarr1;
-    int* myarr2;
+    int* myarr1 = NULL;
+    int* mysubarr1 = NULL;
+    int* myarr2 = NULL;
 
     if(argc < 2) {
         printf("Need to pass matrix dimension\n");
         return -1;
     } else {
-        N = atoi(argv[1]);
+        N = atoi(argv[1]);        
         sprintf(file_in,"input.%d.bin",N);
         sprintf(file_out,"output.%d.bin",N);
+        N = N * N;
     }
-    
-    //create data array 
-    myarr1 = (int*)malloc(N*N*sizeof(int));
     
     MPI_Init(&argc, &argv);                       //Initialize the MP
     MPI_Comm_rank(MPI_COMM_WORLD, &myid);         //Get the processor id of the execution
     MPI_Comm_size(MPI_COMM_WORLD, &g_numThreads); //Get number of processor of the execution
-    chunk_size = N/(g_numThreads);                //calculate the size of data a worker will work on
+    chunk_size = N/(g_numThreads);                //calculate the size of data a worker will work on      
     //printf("rank = %d, number of p = %d\n", myid, g_numThreads);
     if (myid == 0) {
         /***MAIN PROCESSOR***/
-        if (read_from_file(file_in,myarr1,N*N) != 1) {
+
+        //create data arrays
+        myarr1 = (int*)malloc(N*sizeof(int));        
+        myarr2 = (int*)malloc(N*sizeof(int));
+
+        if (read_from_file(file_in, myarr1, N) != 1) {
 #ifdef MYDEBUG
             printf("could not read input files\n");
 #endif
@@ -154,32 +120,39 @@ int main(int argc, char* argv[]) {
         }                
 #ifdef MYDEBUG
         printf("\nStarting Parallel Sorting Test...\n");
-        //initialize arrays with random values
-        // srand(time(NULL));
-        // for(i=0; i<N; i++) {
-        //     myarr1[i] = rand() % N + 1;
-        //     myarr2[i] = myarr1[i];
-        // }
         tstart1 = MPI_Wtime();
-#endif
+#endif        
         //send work to workers    
-        for (worker = 1; worker < g_numThreads; worker++) {            
-            start = (worker-1) * chunk_size;            
+        //MPI_Scatter(myarr1, chunk_size, MPI_INT, mysubarr1, chunk_size, MPI_INT, myid, MPI_COMM_WORLD);
+        for (worker = 1; worker < g_numThreads; worker++) {
+            start = worker * chunk_size; //chunk of data starting address for worker            
+            MPI_Send((myarr1+start), chunk_size, MPI_INT, worker, 1, MPI_COMM_WORLD);
         }
 
+        //main trhead does work on first chunk 
+        sequential_sort(myarr1,0,chunk_size-1);
+
+        //receive results from workers
+        //MPI_Gather(mysubarr1, chunk_size, MPI_INT, myarr1, chunk_size, MPI_INT, myid, MPI_COMM_WORLD);
+        for (worker = 1; worker < g_numThreads; worker++) {
+            start = worker * chunk_size; //chunk of data starting address for worker
+            MPI_Recv((myarr1+start), chunk_size, MPI_INT, worker, 2, MPI_COMM_WORLD, &work_status);
+        }
+
+        //do final sort on all data received
+        sequential_sort(myarr1, 0, N-1);
 #ifdef MYDEBUG
         tend1 = MPI_Wtime();
 
         //sequential
         printf("\nStarting Sequential Sorting Test...\n");
-        myarr2 = (int*)malloc(N*N*sizeof(int));
         tstart2 = MPI_Wtime();
-        sequential_sort(myarr2,0,(N*N)-1);
+        sequential_sort(myarr2,0,N-1);
         tend2 = MPI_Wtime();
 
         char result[20];
         sprintf(result, "%s", "PASS");
-        for(i=0; i < N*N-1; i++) {
+        for(i=0; i < N-1; i++) {
             //printf("myarr1[%d] = %d, myarr2[%d] = %d\n", i, myarr1[i, i, myarr2[i]);
             if(myarr1[i] > myarr1[i+1]) {
                 sprintf(result, "%s", "FAIL not sorted");
@@ -191,27 +164,27 @@ int main(int argc, char* argv[]) {
         exectime2 = (tend2 - tstart2) * 1000.0; // sec to ms
         exectime2 += (tend2 - tstart2) / 1000.0; // us to ms
 
-    printf("MPI Parallel sort. Result is %s\n", result);
-    printf("Parallel MPI execution time %.3lf ms\n", exectime1);
-    printf("Sequential execution time %.3lf ms\n", exectime2);
+        printf("MPI Parallel sort. Result is %s\n", result);
+        printf("Parallel MPI execution time %.3lf ms\n", exectime1);
+        printf("Sequential execution time %.3lf ms\n", exectime2);
 #endif
         //output data to file
-        rval = write_to_file(file_out,myarr1,N*N);
+        rval = write_to_file(file_out,myarr1,N);
 #ifdef MYDEBUG
         if(rval == 1) {
             printf("Successfully written output matrix.\n");
-            rval = read_from_file(file_out,myarr2,N*N);
+            rval = read_from_file(file_out,myarr2,N);
         } else {
             printf("Could not write output matrix\n");
         }
 
         if(rval == 1) {
-	        for(i=0; i<N*N; i++) {
+	        for(i=0; i<N; i++) {
 	            if (myarr1[i] != myarr2[i]) break;
             }
         
-            if(i==N*N) {
-                printf("integrity verified. All %d elements match.\n", N*N);
+            if(i==N) {
+                printf("integrity verified. All %d elements match.\n", N);
             } else {
                 printf("Mismatch at element %d (a[%d] = %d; b[%d] = %d;)\n",
                       i, i, myarr1[i], i, myarr2[i]);
@@ -222,14 +195,28 @@ int main(int argc, char* argv[]) {
 #endif
     } else {
         /***WORKING PROCESSOR***/
+        //Create local array for workers
+        mysubarr1 = (int*)malloc(chunk_size*sizeof(int));
 
+        //receive data from main to start work
+        MPI_Recv(mysubarr1, chunk_size, MPI_INT, 0, 1, MPI_COMM_WORLD, &work_status);
+
+        //do work
+        sequential_sort(mysubarr1, 0, chunk_size-1);
+
+        //send result to main
+        MPI_Send(mysubarr1, chunk_size, MPI_INT, 0, 2, MPI_COMM_WORLD);
+
+        //cleanup local data
+        free(mysubarr1);
     }
 
 end:
-    free(myarr1);
-#ifdef MYDEBUG    
+    // Finalize the MPI environment.    
+    free(myarr1);    
+#ifdef MYDEBUG
     free(myarr2);
 #endif
     MPI_Finalize();
-    return 1;
+    return 0;
 }
