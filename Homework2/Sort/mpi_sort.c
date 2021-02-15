@@ -84,8 +84,8 @@ int main(int argc, char* argv[]) {
     int i, myid, chunk_size, worker, start, N, rval;
     double tstart1, tend1, tstart2, tend2, exectime1, exectime2;
     MPI_Status work_status;
-    char file_in[15];
-    char file_out[15];
+    char file_in[20];
+    char file_out[20];
     int* myarr1 = NULL;
     int* mysubarr1 = NULL;
     int* myarr2 = NULL;
@@ -94,7 +94,7 @@ int main(int argc, char* argv[]) {
         printf("Need to pass matrix dimension\n");
         return -1;
     } else {
-        N = atoi(argv[1]);        
+        N = atoi(argv[1]);     
         sprintf(file_in,"input.%d.bin",N);
         sprintf(file_out,"output.%d.bin",N);
         N = N * N;
@@ -109,7 +109,7 @@ int main(int argc, char* argv[]) {
         /***MAIN PROCESSOR***/
 
         //create data arrays
-        myarr1 = (int*)malloc(N*sizeof(int));        
+        myarr1 = (int*)malloc(N*sizeof(int));
         myarr2 = (int*)malloc(N*sizeof(int));
 
         if (read_from_file(file_in, myarr1, N) != 1) {
@@ -119,7 +119,7 @@ int main(int argc, char* argv[]) {
             goto end;
         }                
 #ifdef MYDEBUG
-        printf("\nStarting Parallel Sorting Test...\n");
+        printf("Starting Parallel Sorting Test...\n");
         tstart1 = MPI_Wtime();
 #endif        
         //send work to workers    
@@ -145,7 +145,7 @@ int main(int argc, char* argv[]) {
         tend1 = MPI_Wtime();
 
         //sequential
-        printf("\nStarting Sequential Sorting Test...\n");
+        printf("Starting Sequential Sorting Test...\n");
         tstart2 = MPI_Wtime();
         sequential_sort(myarr2,0,N-1);
         tend2 = MPI_Wtime();
