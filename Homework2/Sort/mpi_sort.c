@@ -9,15 +9,8 @@
 #include <unistd.h>
 #include <mpi.h>
 
-#define DIM 8
 int g_numThreads;
 int g_woring_threads;
-
-typedef struct sortData {
-    int * pArr;
-    int bot;
-    int top;
-} sortdata_t;
 
 int write_to_file(char * filename, int *data, int num) {
     FILE * fp;
@@ -126,10 +119,9 @@ void sequential_sort(int *arr, int bot, int top) {
 // }
 
 int main(int argc, char* argv[]) {
-    int i, myid, chunk_size, worker, start, rval;
+    int i, myid, chunk_size, worker, start, N, rval;
     double tstart1, tend1, tstart2, tend2, exectime1, exectime2;
     MPI_Status work_status;
-    int N = pow(2,DIM);
     char file_in[15];
     char file_out[15];
     int* myarr1;

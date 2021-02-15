@@ -11,7 +11,6 @@
 #include <ctype.h>
 #include <mpi.h>
 
-//#define DIM 8
 int g_numThreads;
 
 int write_to_file(char * filename, double *data, int num) {
