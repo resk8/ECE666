@@ -86,6 +86,10 @@ int main(int argc, char* argv[]) {
     char file_a[15];
     char file_b[15];
     char file_c[15];
+    double* a;
+    double* b;
+    double* c;
+    double* d;
 
     if(argc < 2) {
         printf("Need to pass matrix dimension\n");
@@ -97,10 +101,10 @@ int main(int argc, char* argv[]) {
         sprintf(file_c,"c.%d.bin",N);
     }
 
-    double* a = (double*)malloc(N*N*sizeof(double));
-    double* b = (double*)malloc(N*N*sizeof(double));
-    double* c = (double*)malloc(N*N*sizeof(double));
-    double* d = (double*)malloc(N*N*sizeof(double));
+    //Create Matrices
+    a = (double*)malloc(N*N*sizeof(double));
+    b = (double*)malloc(N*N*sizeof(double));
+    c = (double*)malloc(N*N*sizeof(double));
 
     MPI_Init(&argc, &argv);                       //Initialize the MP
     MPI_Comm_rank(MPI_COMM_WORLD, &myid);         //Get the processor id of the execution
@@ -108,6 +112,7 @@ int main(int argc, char* argv[]) {
     chunk_size = N/(g_numThreads);                //calculate the size of data a worker will work on
     //printf("rank = %d, number of p = %d\n", myid, g_numThreads);
     if (myid == 0) {
+        /***MAIN PROCESSOR***/
         if ((read_from_file(file_a,a,N*N) != 1) || (read_from_file(file_b,b,N*N) != 1)) {
 #ifdef MYDEBUG
             printf("could not read input files\n");
@@ -150,6 +155,7 @@ int main(int argc, char* argv[]) {
 
         //sequential
         printf("Starting Sequential Matrix Multiplication Test...\n");
+        double* d = (double*)malloc(N*N*sizeof(double));
         tstart2 = MPI_Wtime();
         sequential_matmult(N,a,b,d);
         tend2 = MPI_Wtime();
@@ -201,7 +207,8 @@ int main(int argc, char* argv[]) {
             printf("Could read output matrix for verification\n"); 
         }
 #endif
-    } else {        
+    } else {
+        /***WORKING PROCESSOR***/
         //receive data from main to start work
         MPI_Recv(a, chunk_size*N, MPI_DOUBLE, 0, 1, MPI_COMM_WORLD, &work_status);
         MPI_Recv(b, N*N, MPI_DOUBLE, 0, 1, MPI_COMM_WORLD, &work_status);
@@ -215,17 +222,18 @@ int main(int argc, char* argv[]) {
                }
            }
         }
-
         //send result to main
         MPI_Send(c, chunk_size*N, MPI_DOUBLE, 0, 2, MPI_COMM_WORLD);
     }
 
 end:
     // Finalize the MPI environment.
-    MPI_Finalize();
     free(a);
     free(b);
     free(c);
+#ifdef MYDEBUG
     free(d);
+#endif
+    MPI_Finalize();
     return 0;
 }

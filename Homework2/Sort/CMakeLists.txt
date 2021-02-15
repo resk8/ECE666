@@ -1,5 +1,5 @@
 # Get the problem name from the current directory
-get_filename_component(problem bubblesort NAME)
+get_filename_component(problem sort NAME)
 #project(${problem} C)
 
 add_definitions(-DMYDEBUG)
