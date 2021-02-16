@@ -178,10 +178,10 @@ int main(int argc, char* argv[]) {
         rval = write_to_file(file_out,myarr1,N);
 #ifdef MYDEBUG
         if(rval == 1) {
-            printf("Successfully written output matrix.\n");
+            printf("Successfully written output sorted data.\n");
             rval = read_from_file(file_out,myarr2,N);
         } else {
-            printf("Could not write output matrix\n");
+            printf("Could not write output sorted data\n");
         }
 
         if(rval == 1) {
