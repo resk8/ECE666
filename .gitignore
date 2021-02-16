@@ -2,8 +2,7 @@
 */build/*
 build/*
 settings.json
-*4096*
-c.*
-output.*
+*.bin
+homework1
 matrixmul
 quicksort
