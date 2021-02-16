@@ -25,18 +25,21 @@ void do_swap(int *x, int *y) {
 }
 
 int do_split(int my_arr[], int bot, int top) {
-    int i;
-    int index = bot - 1;
-    int pivot = my_arr[top];
+    int i = bot, j = top, middle = bot; 
 
-    for (i=bot; i <= top-1; i++) {
-        if (my_arr[i] < pivot) {
-            index++;
-            do_swap(&my_arr[index], &my_arr[i]);
+    while(i < j) {
+        while(my_arr[i] <= my_arr[middle] && i < top) {
+            i++;
+        }
+        while(my_arr[j] > my_arr[middle]) {
+            j--;
+        }
+        if(i < j) {
+            do_swap(&my_arr[i], &my_arr[j]);
         }
     }
-    do_swap(&my_arr[index+1], &my_arr[top]);
-    return (index+1);
+    do_swap(&my_arr[middle], &my_arr[j]);
+    return j;
 }
 
 void _quickSort(int *arr, int bot, int top) {

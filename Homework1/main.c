@@ -5,7 +5,7 @@
 #include <sys/time.h>
 
 #define NUM_THREADS 8
-#define DIM 9
+#define DIM 12
 
 extern void matmult(int N, int *a, int *b, int *c, int nThreads);
 extern void sort(int N, int *arr, int nThreads);
@@ -74,10 +74,10 @@ void do_matrix_test(void) {
     
     int dim = pow(2,DIM);
     int twoD_dim = dim*dim; //2dmatrix N X N
-    int A[twoD_dim];
-    int B[twoD_dim];
-    int C[twoD_dim];
-    int D[twoD_dim];
+    int* A = (int*)malloc(twoD_dim*sizeof(int));
+    int* B = (int*)malloc(twoD_dim*sizeof(int)); 
+    int* C = (int*)malloc(twoD_dim*sizeof(int)); 
+    int* D = (int*)malloc(twoD_dim*sizeof(int)); 
 
     printf("\nStarting Matrix Multiplication Test...\n");
 
@@ -114,15 +114,24 @@ void do_matrix_test(void) {
     printf("Matrix mul. Result is %s\n", result);
     printf("Parallel execution time %.3lf ms\n", exectime1);
     printf("Sequential execution time %.3lf ms\n", exectime2);
+
+    free(A);
+    free(B);
+    free(C);
+    free(D);
 }
 
 void do_sort_test(void) {
     int i;
-    int size = pow(2,2*DIM);
-    int myarr1[size];
-    int myarr2[size];
+    int size = pow(2,DIM);    
+    int * myarr1 = NULL;
+    int * myarr2 = NULL;
     double exectime1, exectime2;
     struct timeval tstart1, tend1, tstart2, tend2;
+
+    size = size* size;
+    myarr1 = (int*)malloc(size*sizeof(int));
+    myarr2 = (int*)malloc(size*sizeof(int));
 
     printf("\nStarting Sorting Test...\n");
 
@@ -168,6 +177,9 @@ void do_sort_test(void) {
     printf("Parallel sort. Result is %s\n", result);
     printf("Parallel execution time %.3lf ms\n", exectime1);
     printf("Sequential execution time %.3lf ms\n", exectime2);
+
+    free(myarr1);
+    free(myarr2);
 }
 
 int main(void) {

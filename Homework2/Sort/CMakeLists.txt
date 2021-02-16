@@ -1,7 +1,5 @@
 # Get the problem name from the current directory
 get_filename_component(problem quicksort NAME)
-#project(${problem} C)
-
 add_definitions(-DMYDEBUG)
 # Add all cpp and h files
 file(GLOB SRC_FILES
