@@ -15,3 +15,7 @@ file(GLOB SRC_FILES
 )
 
 add_executable(${problem} ${SRC_FILES})
+set_target_properties(${problem} 
+                      PROPERTIES 
+                      RUNTIME_OUTPUT_DIRECTORY 
+                      "${CMAKE_SOURCE_DIR}/Homework1/bin")

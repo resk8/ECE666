@@ -4,4 +4,4 @@ find_package(MPI)
 include_directories(SYSTEM ${MPI_C_INCLUDE_PATH})
 
 add_subdirectory(MatrixMul)
-add_subdirectory(Sort)
+add_subdirectory(QuickSort)

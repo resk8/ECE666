@@ -81,9 +81,15 @@ int main(int argc, char* argv[]) {
         return -1;
     } else {
         N = atoi(argv[1]);
+#ifdef MYDEBUG
+        sprintf(file_a,"bin/A.%d.bin",N);
+        sprintf(file_b,"bin/B.%d.bin",N);
+        sprintf(file_c,"bin/C.%d.bin",N);
+#else
         sprintf(file_a,"A.%d.bin",N);
         sprintf(file_b,"B.%d.bin",N);
         sprintf(file_c,"C.%d.bin",N);
+#endif
     }
 
     //Create Matrices
