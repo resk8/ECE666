@@ -1,8 +1,10 @@
 # cmakes build folder
+*/bin/*
 */build/*
+bin/*
 build/*
 settings.json
 *.bin
 homework1
-matrixmul
-quicksort
+matmult*
+quicksort*

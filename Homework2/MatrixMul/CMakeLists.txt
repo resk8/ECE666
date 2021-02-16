@@ -1,5 +1,5 @@
 # Get the problem name from the current directory
-get_filename_component(problem matrixmul NAME)
+get_filename_component(problem matmult_d NAME)
 add_definitions(-DMYDEBUG)
 # Add all cpp and h files
 file(GLOB SRC_FILES
