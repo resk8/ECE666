@@ -19,7 +19,7 @@ int write_to_file(char * filename, double *data, int num) {
     fp = fopen(filename, "w");
     if (fp ==NULL) {
 	    printf("file not found: %s\n", filename);
-	    exit(-1);
+	    return -1;
     }
     write_count = fwrite( (const void*) data, sizeof(double),num,fp);
     if (write_count == num) {
@@ -37,7 +37,7 @@ int read_from_file(char * filename, double *data, int num) {
     fp = fopen(filename, "rb");
     if (fp ==NULL) {
 	    printf("file not found: %s\n", filename);
-	    exit(-1);
+	    return -1;
     }
     read_count = fread( (void*) data, sizeof(double),num,fp);
     if (read_count == num) {
@@ -105,10 +105,13 @@ int main(int argc, char* argv[]) {
     if (myid == 0) {
         /***MAIN PROCESSOR***/
         if ((read_from_file(file_a,a,N*N) != 1) || (read_from_file(file_b,b,N*N) != 1)) {
-#ifdef MYDEBUG
-            printf("could not read input files\n");
-#endif
-            goto end;
+            printf("could not read input files %s and %s\n",file_a,file_b);
+            // Finalize the MPI environment.
+            free(a);
+            free(b);
+            free(c);
+            MPI_Abort(MPI_COMM_WORLD,-1);
+            exit(-1);
         }
 
 #ifdef MYDEBUG
@@ -119,8 +122,10 @@ int main(int argc, char* argv[]) {
         for (worker = 1; worker < g_numThreads; worker++) {
             start = worker * chunk_size; //chunk of data starting address for worker
             offset = start * N;          //starting row of the chunk (convert from 1D to 2D)
-            MPI_Send((a+offset), chunk_size*N, MPI_DOUBLE, worker, 1, MPI_COMM_WORLD);
-            MPI_Send(b, N*N, MPI_DOUBLE, worker, 1, MPI_COMM_WORLD);
+            if(g_numThreads > 1) {
+                MPI_Send((a+offset), chunk_size*N, MPI_DOUBLE, worker, 1, MPI_COMM_WORLD);
+                MPI_Send(b, N*N, MPI_DOUBLE, worker, 1, MPI_COMM_WORLD);
+            }                
         }
 
         // main trhead does work on first chunk        
@@ -137,39 +142,37 @@ int main(int argc, char* argv[]) {
         for (worker = 1; worker < g_numThreads; worker++) {
             start = worker * chunk_size; //chunk of data starting address for worker
             offset = start * N;          //starting row of the chunk (convert from 1D to 2D)
-            MPI_Recv((c+offset), chunk_size*N, MPI_DOUBLE, worker, 2, MPI_COMM_WORLD, &work_status);
+            if(g_numThreads > 1)
+                MPI_Recv((c+offset), chunk_size*N, MPI_DOUBLE, worker, 2, MPI_COMM_WORLD, &work_status);
         }
 #ifdef MYDEBUG
         tend1 = MPI_Wtime();
-
+    #ifdef MYDEBUG2
         //sequential
         printf("Starting Sequential Matrix Multiplication Test...\n");
         double* d = (double*)malloc(N*N*sizeof(double));
         tstart2 = MPI_Wtime();
         sequential_matmult(N,a,b,d);
         tend2 = MPI_Wtime();
-        
 
         char result[5];
         sprintf(result, "%s", "PASS");
         for(i=0;i<N;i++)
-        {
             for(j=0;j<N;j++) {
                 //printf("c[%d][%d] = %6.2f, d[%d][%d] = %6.2f\n", i,j, *((c+i*N) + j),i,j,*((d+i*N) + j));
-                if(*((c+i*N) + j) != *((d+i*N) + j)) {
-                    sprintf(result, "%s", "FAIL");
-                }
+                if(*((c+i*N) + j) != *((d+i*N) + j))
+                    sprintf(result, "%s", "FAIL");              
             }
-        }
-
-        exectime1 = (tend1 - tstart1) * 1000.0; // sec to ms
-        exectime1 += (tend1 - tstart1) / 1000.0; // us to ms
-        exectime2 = (tend2 - tstart2) * 1000.0; // sec to ms
-        exectime2 += (tend2 - tstart2) / 1000.0; // us to ms
+        free(d);
 
         printf("MPI Matrix mul. Result is %s\n", result);
-        printf("Parallel MPI execution time %.3lf ms\n", exectime1);
-        printf("Sequential execution time %.3lf ms\n", exectime2);
+        exectime2 = (tend2 - tstart2) * 1000.0; // sec to ms
+        exectime2 += (tend2 - tstart2) / 1000.0; // us to ms
+        printf("Sequential execution time %.3lf ms\n", exectime2);                
+    #endif
+        exectime1 = (tend1 - tstart1) * 1000.0; // sec to ms
+        exectime1 += (tend1 - tstart1) / 1000.0; // us to ms        
+        printf("Parallel MPI execution time %.3lf ms\n", exectime1);        
 #endif
         //output data to file
         rval = write_to_file(file_c,c,N*N);
@@ -211,18 +214,14 @@ int main(int argc, char* argv[]) {
                }
            }
         }
-        //send result to main
+
         MPI_Send(c, chunk_size*N, MPI_DOUBLE, 0, 2, MPI_COMM_WORLD);
     }
 
-end:
     // Finalize the MPI environment.
     free(a);
     free(b);
     free(c);
-#ifdef MYDEBUG
-    free(d);
-#endif
     MPI_Finalize();
     return 0;
 }
