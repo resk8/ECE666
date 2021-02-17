@@ -180,7 +180,7 @@ int main(int argc, char* argv[]) {
 #endif
         //output data to file
         rval = write_to_file(file_out,myarr1,N);
-#ifdef MYDEBUG
+#ifdef MYDEBUG2
         if(rval == 1) {
             printf("Successfully written output sorted data.\n");
             rval = read_from_file(file_out,myarr2,N);
@@ -201,13 +201,10 @@ int main(int argc, char* argv[]) {
             }
         } else {
             printf("Could read output matrix for verification\n"); 
-        }        
-#endif
-end:
-        free(myarr1);
-#ifdef MYDEBUG2
+        }
         free(myarr2);
 #endif
+        free(myarr1);
     } 
 
     // Finalize the MPI environment.    

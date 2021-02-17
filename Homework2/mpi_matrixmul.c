@@ -118,15 +118,14 @@ int main(int argc, char* argv[]) {
         printf("Starting Parallel Matrix Multiplication Test...\n");
         tstart1 = MPI_Wtime();
 #endif
-        //send work to workers
-        for (worker = 1; worker < g_numThreads; worker++) {
-            start = worker * chunk_size; //chunk of data starting address for worker
-            offset = start * N;          //starting row of the chunk (convert from 1D to 2D)
-            if(g_numThreads > 1) {
+        if(g_numThreads > 1)
+            for (worker = 1; worker < g_numThreads; worker++) {
+                start = worker * chunk_size; //chunk of data starting address for worker
+                offset = start * N;          //starting row of the chunk (convert from 1D to 2D)                
+                //send work to workers
                 MPI_Send((a+offset), chunk_size*N, MPI_DOUBLE, worker, 1, MPI_COMM_WORLD);
                 MPI_Send(b, N*N, MPI_DOUBLE, worker, 1, MPI_COMM_WORLD);
-            }                
-        }
+            }
 
         // main trhead does work on first chunk        
         for(i=0; i<chunk_size; i++) {
@@ -138,13 +137,14 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        //receive results from workers
-        for (worker = 1; worker < g_numThreads; worker++) {
-            start = worker * chunk_size; //chunk of data starting address for worker
-            offset = start * N;          //starting row of the chunk (convert from 1D to 2D)
-            if(g_numThreads > 1)
+        if(g_numThreads > 1)
+            for (worker = 1; worker < g_numThreads; worker++) {
+                start = worker * chunk_size; //chunk of data starting address for worker
+                offset = start * N;          //starting row of the chunk (convert from 1D to 2D)                
+                //receive results from workers
                 MPI_Recv((c+offset), chunk_size*N, MPI_DOUBLE, worker, 2, MPI_COMM_WORLD, &work_status);
-        }
+            }
+
 #ifdef MYDEBUG
         tend1 = MPI_Wtime();
     #ifdef MYDEBUG2
@@ -162,8 +162,7 @@ int main(int argc, char* argv[]) {
                 //printf("c[%d][%d] = %6.2f, d[%d][%d] = %6.2f\n", i,j, *((c+i*N) + j),i,j,*((d+i*N) + j));
                 if(*((c+i*N) + j) != *((d+i*N) + j))
                     sprintf(result, "%s", "FAIL");              
-            }
-        free(d);
+            }        
 
         printf("MPI Matrix mul. Result is %s\n", result);
         exectime2 = (tend2 - tstart2) * 1000.0; // sec to ms
@@ -176,7 +175,7 @@ int main(int argc, char* argv[]) {
 #endif
         //output data to file
         rval = write_to_file(file_c,c,N*N);
-#ifdef MYDEBUG
+#ifdef MYDEBUG2
         if(rval == 1) {
             printf("Successfully written output matrix.\n");
             rval = read_from_file(file_c,d,N*N);
@@ -198,24 +197,26 @@ int main(int argc, char* argv[]) {
         } else {
             printf("Could read output matrix for verification\n"); 
         }
+        free(d);
 #endif
     } else {
         /***WORKING PROCESSOR***/
         //receive data from main to start work
-        MPI_Recv(a, chunk_size*N, MPI_DOUBLE, 0, 1, MPI_COMM_WORLD, &work_status);
-        MPI_Recv(b, N*N, MPI_DOUBLE, 0, 1, MPI_COMM_WORLD, &work_status);
+        if(g_numThreads > 1) {
+            MPI_Recv(a, chunk_size*N, MPI_DOUBLE, 0, 1, MPI_COMM_WORLD, &work_status);
+            MPI_Recv(b, N*N, MPI_DOUBLE, 0, 1, MPI_COMM_WORLD, &work_status);
 
-        //the work
-        for(i=0; i<chunk_size; i++) {
-           for(j=0; j<N; j++) {
-               *((c+i*N) + j) = 0;
-               for(k=0; k<N; k++) {
-                   *((c+i*N) + j) += *((a+i*N) + k) * *((b+k*N) + j);
-               }
-           }
+            //the work
+            for(i=0; i<chunk_size; i++) {
+                for(j=0; j<N; j++) {
+                    *((c+i*N) + j) = 0;
+                    for(k=0; k<N; k++) {
+                        *((c+i*N) + j) += *((a+i*N) + k) * *((b+k*N) + j);
+                    }
+                }
+            }
+            MPI_Send(c, chunk_size*N, MPI_DOUBLE, 0, 2, MPI_COMM_WORLD);
         }
-
-        MPI_Send(c, chunk_size*N, MPI_DOUBLE, 0, 2, MPI_COMM_WORLD);
     }
 
     // Finalize the MPI environment.
