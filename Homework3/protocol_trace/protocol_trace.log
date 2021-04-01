@@ -1,0 +1,31 @@
+Global frequency set at 1000000000 ticks per second
+gem5 Simulator System.  http://gem5.org
+gem5 is copyrighted software; use the --copyright option for details.
+
+gem5 version 21.0.0.0
+gem5 compiled Apr  1 2021 01:21:42
+gem5 started Apr  1 2021 01:50:19
+gem5 executing on ecegrid-thin6.ecn.purdue.edu, pid 33596
+command line: ./build/ECE666/gem5.opt --debug-flag=ProtocolTrace configs/example/ruby_random_test.py -n 4 --maxloads 100
+          
+          <SECTION OF TRACE, Fwd req = cache-to-cache trasfer>
+          16498   0    L1Cache         Replacement     IM>IM     [0x32c0, line 0x32c0] Protocol Stall
+          16498   3    L1Cache            Fwd_GETX     IM>IM     [0x32c0, line 0x32c0] Protocol Stall
+          16498   3    L1Cache         Replacement     IM>IM     [0x32c0, line 0x32c0] Protocol Stall
+          16499   3    L1Cache            Fwd_GETX     IM>IM     [0x32c0, line 0x32c0] Protocol Stall
+          16499   3        Seq                Done       >       [0x32e9, line 0x32c0] 4828 cycles
+          16499   3    L1Cache                Data     IM>M      [0x32c0, line 0x32c0] 
+          16499   3    L1Cache            Fwd_GETX      M>I      [0x32c0, line 0x32c0] 
+          16499   3    L1Cache         Replacement     IM>IM     [0x5ec0, line 0x5ec0] Protocol Stall
+          16499   0    L1Cache         Replacement     IM>IM     [0x32c0, line 0x32c0] Protocol Stall
+          16499   1    L1Cache         Replacement     IM>IM     [0x3fc0, line 0x3fc0] Protocol Stall
+          16499   2    L1Cache         Replacement     IM>IM     [0x35c0, line 0x35c0] Protocol Stall
+          16500   2    L1Cache         Replacement     IM>IM     [0x35c0, line 0x35c0] Protocol Stall
+          16500   1    L1Cache         Replacement     IM>IM     [0x3fc0, line 0x3fc0] Protocol Stall
+          16500   0    L1Cache         Replacement     IM>IM     [0x32c0, line 0x32c0] Protocol Stall
+          16500   3        Seq                Done       >       [0x5ee8, line 0x5ec0] 4369 cycles
+          16500   3    L1Cache                Data     IM>M      [0x5ec0, line 0x5ec0] 
+          16500   3    L1Cache         Replacement      I>I      [0x32c0, line 0x32c0] 
+          16500   3    L1Cache               Store      I>IM     [0x8c0, line 0x8c0] 
+          16500   3    L1Cache         Replacement      M>MI     [0x5ec0, line 0x5ec0] 
+          16501   3    L1Cache               Store      I>IM     [0x55c0, line 0x55c0] 
