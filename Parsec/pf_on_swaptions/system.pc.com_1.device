@@ -80,7 +80,7 @@ Kernel command line: earlyprintk=ttyS0 console=ttyS0 lpj=7999923 root=/dev/hda1
 Initializing CPU#0
 PID hash table entries: 2048 (order: 11, 16384 bytes)
 Fast TSC calibration using PIT
-Detected 1999.999 MHz processor.
+Detected 2000.000 MHz processor.
 Console: colour dummy device 80x25
 console handover: boot [earlyser0] -> real [ttyS0]
 Dentry cache hash table entries: 65536 (order: 7, 524288 bytes)
@@ -309,13 +309,13 @@ Swaption4: [SwaptionPrice: 0.0000234735 StdError: 0.0000083599]
 Swaption5: [SwaptionPrice: 0.0000234735 StdError: 0.0000083599] 
 Swaption6: [SwaptionPrice: 0.0000234735 StdError: 0.0000083599] 
 Swaption7: [SwaptionPrice: 0.0000234735 StdError: 0.0000083599] 
-Swaption8: [SwaptionPrice: 0.0000000000 StdError: 0.0000000000] 
+Swaption8: [SwaptionPrice: 0.0000234735 StdError: 0.0000083599] 
 Swaption9: [SwaptionPrice: 0.0000234735 StdError: 0.0000083599] 
 Swaption10: [SwaptionPrice: 0.0000234735 StdError: 0.0000083599] 
 Swaption11: [SwaptionPrice: 0.0000234735 StdError: 0.0000083599] 
 Swaption12: [SwaptionPrice: 0.0000234735 StdError: 0.0000083599] 
 Swaption13: [SwaptionPrice: 0.0000234735 StdError: 0.0000083599] 
-Swaption14: [SwaptionPrice: 0.0000234735 StdError: 0.0000083599] 
+Swaption14: [SwaptionPrice: 0.0000234920 StdError: 0.0000083632] 
 Swaption15: [SwaptionPrice: 0.0000234735 StdError: 0.0000083599] 
 [HOOKS] Total time spent in ROI: 0.124s
 [HOOKS] Terminating

@@ -79,7 +79,7 @@ def main():
                 median = (pf_data + no_pf_data)/2         
                 celling = median+3*diff
                 floor = median-3*diff if median-3*diff > 0 else 0
-                if field in ['simSeconds','simInsts']:
+                if field in 'simSeconds':
                     title = field
                     msg = 'seconds'                    
                 else:

@@ -80,7 +80,7 @@ Kernel command line: earlyprintk=ttyS0 console=ttyS0 lpj=7999923 root=/dev/hda1
 Initializing CPU#0
 PID hash table entries: 2048 (order: 11, 16384 bytes)
 Fast TSC calibration using PIT
-Detected 1999.999 MHz processor.
+Detected 2000.000 MHz processor.
 Console: colour dummy device 80x25
 console handover: boot [earlyser0] -> real [ttyS0]
 Dentry cache hash table entries: 65536 (order: 7, 524288 bytes)
@@ -303,6 +303,6 @@ Num of Runs: 100
 Size of data: 163840
 [HOOKS] Entering ROI
 [HOOKS] Leaving ROI
-[HOOKS] Total time spent in ROI: 0.032s
+[HOOKS] Total time spent in ROI: 0.028s
 [HOOKS] Terminating
 Done :D
