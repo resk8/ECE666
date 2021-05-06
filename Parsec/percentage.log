@@ -1,0 +1,7 @@
+simSeconds : average_pf 5.062877272727273, average_no_pf 5.062953545454544, difference percent 0.0015064868082669003
+simInsts : average_pf 327296891.6363636, average_no_pf 327382734.3636364, difference percent 0.0262209085154137
+system.ruby.network.avg_link_utilization : average_pf 0.013869999999999995, average_no_pf 0.05117954545454546, difference percent 72.89932945512679
+system.ruby.network.average_packet_latency : average_pf 8166.718157454546, average_no_pf 9355.030570636363, difference percent 12.702389417215814
+system.ruby.network.average_packet_network_latency : average_pf 5027.492178454545, average_no_pf 4557.866275, difference percent 9.341156321776875
+system.ruby.network.packets_injected::total : average_pf 16135772.818181818, average_no_pf 97928488.81818181, difference percent 83.52290225968852
+system.ruby.network.packets_received::total : average_pf 16135772.818181818, average_no_pf 97928488.81818181, difference percent 83.52290225968852
