@@ -1,11 +1,11 @@
 #!/bin/bash
 
-#BENCHMARK="x264 freqmine streamcluster vips ferret fluidanimate dedup canneal bodytrack swaptions"
+BENCHMARK="x264 ferret freqmine streamcluster vips ferret fluidanimate dedup canneal bodytrack swaptions"
 #BENCHMARK="blackscholes"
 #BENCHMARK="canneal"
 #BENCHMARK="blackscholes"
 #BENCHMARK="bodytrack"
-BENCHMARK="ferret"
+#BENCHMARK="ferret"
 for benchmark in $BENCHMARK; do
   rcs="_16c_simsmall.rcS"
   #rcs="_16c_test.rcS"
